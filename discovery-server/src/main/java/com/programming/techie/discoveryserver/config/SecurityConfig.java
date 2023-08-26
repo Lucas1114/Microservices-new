@@ -1,67 +1,34 @@
 package com.programming.techie.discoveryserver.config;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-import org.springframework.security.web.SecurityFilterChain;
-
-import javax.sql.DataSource;
-
 
 @Configuration
-@EnableWebSecurity
-public class SecurityConfig {
-
-//    @Override
-//    public void configure(AuthenticationManagerBuilder authenticationmanagerBuilder) throws Exception {
-//        authenticationmanagerBuilder.inMemoryAuthentication()
-//                .withUser("eureka").password("password")
-//                .authorities("USER");
-//    }
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Value("${eureka.username}")
     private String username;
     @Value("${eureka.password}")
     private String password;
 
-    @Bean
-    public InMemoryUserDetailsManager userDetailsService() {
-        UserDetails user = User.withDefaultPasswordEncoder()
-//                .passwordEncoder(NoOpPasswordEncoder.getInstance())
-                .username(username)
-                .password(password)
-                .roles("USER")
-                .build();
-        return new InMemoryUserDetailsManager(user);
+    @Override
+    public void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.inMemoryAuthentication()
+                .passwordEncoder(NoOpPasswordEncoder.getInstance())
+                .withUser(username).password(password)
+                .authorities("USER");
     }
 
-
-
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests((authorize)->authorize.anyRequest().authenticated())
-                .httpBasic(Customizer.withDefaults());
-        return httpSecurity.build();
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.csrf().disable()
+                .authorizeRequests().anyRequest()
+                .authenticated()
+                .and()
+                .httpBasic();
     }
-
-
-//    @Override
-//    public void configure(HttpSecurity httpSecurity) throws Exception {
-//        httpSecurity.csrf(AbstractHttpConfigurer::disable)
-//                .authorizeHttpRequests((authorize)->authorize.anyRequest().authenticated())
-//                .httpBasic(Customizer.withDefaults());
-//    }
-
-
-
-
 }
